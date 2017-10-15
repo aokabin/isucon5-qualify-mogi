@@ -120,7 +120,7 @@ LIMIT 10`, user.ID)
 	rows.Close()
 
 	// rows, err = db.Query(`SELECT id, entry_id, user_id, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
-	rows, err = db.Query(`SELECT id, entry_id, user_id, title, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
+	rows, err = db.Query(`SELECT id, entry_id, user_id, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
