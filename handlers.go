@@ -85,7 +85,7 @@ LIMIT 10`, user.ID)
 		select another as friend from relations where one = ?
 		) as b
 		) order by created_at desc limit 10;
-	`, user.ID)
+	`, user.ID, user.ID)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
