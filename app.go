@@ -738,6 +738,9 @@ func main() {
 		user = "isucon"
 	}
 	password := os.Getenv("ISUCON5_DB_PASSWORD")
+	if password == "" {
+		password = "isucon"
+	}
 	dbname := os.Getenv("ISUCON5_DB_NAME")
 	if dbname == "" {
 		dbname = "isucon5q"
