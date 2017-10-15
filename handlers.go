@@ -218,7 +218,7 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	account := mux.Vars(r)["account_name"]
-	owner := getUserFromAccount(w, account)
+	owner := getUserFromAccount(w, r, account)
 	row := db.QueryRow(`SELECT * FROM profiles WHERE user_id = ?`, owner.ID)
 	prof := Profile{}
 	err := row.Scan(&prof.UserID, &prof.FirstName, &prof.LastName, &prof.Sex, &prof.Birthday, &prof.Pref, &prof.UpdatedAt)
@@ -290,7 +290,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	account := mux.Vars(r)["account_name"]
-	owner := getUserFromAccount(w, account)
+	owner := getUserFromAccount(w, r, account)
 	var query string
 	if permitted(w, r, owner.ID) {
 		query = `SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`
@@ -342,7 +342,7 @@ func GetEntry(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 	entry := Entry{id, userID, private == 1, title, body, createdAt}
 	// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
-	owner := getUser(w, entry.UserID)
+	owner := getUser(w, r, entry.UserID)
 	if entry.Private {
 		if !permitted(w, r, owner.ID) {
 			checkErr(ErrPermissionDenied)
@@ -411,7 +411,7 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 	entry := Entry{id, userID, private == 1, title, body, createdAt}
 	// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
-	owner := getUser(w, entry.UserID)
+	owner := getUser(w, r, entry.UserID)
 	if entry.Private {
 		if !permitted(w, r, owner.ID) {
 			checkErr(ErrPermissionDenied)
@@ -475,7 +475,7 @@ func PostFriends(w http.ResponseWriter, r *http.Request) {
 	user := getCurrentUser(w, r)
 	anotherAccount := mux.Vars(r)["account_name"]
 	if !isFriendAccount(w, r, anotherAccount) {
-		another := getUserFromAccount(w, anotherAccount)
+		another := getUserFromAccount(w, r, anotherAccount)
 		_, err := db.Exec(`INSERT INTO relations (one, another) VALUES (?,?), (?,?)`, user.ID, another.ID, another.ID, user.ID)
 		checkErr(err)
 		http.Redirect(w, r, "/friends", http.StatusSeeOther)

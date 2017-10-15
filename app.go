@@ -12,7 +12,6 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	gsm "github.com/bradleypeabody/gorilla-sessions-memcache"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -32,30 +31,18 @@ WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)`
 		checkErr(err)
 	}
 	session := getSession(w, r)
-	session.Values["user_id"] = user.ID
+	session.Values["user"] = user
 	session.Save(r, w)
 }
 
 func getCurrentUser(w http.ResponseWriter, r *http.Request) *User {
-	u := context.Get(r, "user")
-	if u != nil {
-		user := u.(User)
-		return &user
-	}
 	session := getSession(w, r)
-	userID, ok := session.Values["user_id"]
-	if !ok || userID == nil {
-		return nil
+	user, ok := session.Values["user"]
+	if ok {
+		u := user.(User)
+		return &u
 	}
-	row := db.QueryRow(`SELECT id, account_name, nick_name, email FROM users WHERE id=?`, userID)
-	user := User{}
-	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email)
-	if err == sql.ErrNoRows {
-		checkErr(ErrAuthentication)
-	}
-	checkErr(err)
-	context.Set(r, "user", user)
-	return &user
+	return nil
 }
 
 func authenticated(w http.ResponseWriter, r *http.Request) bool {
@@ -67,7 +54,13 @@ func authenticated(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func getUser(w http.ResponseWriter, userID int) *User {
+func getUser(w http.ResponseWriter, r *http.Request, userID int) *User {
+	u := getCurrentUser(w, r)
+	if u != nil {
+		if u.ID == userID {
+			return u
+		}
+	}
 	row := db.QueryRow(`SELECT id, account_name, nick_name, email FROM users WHERE id = ?`, userID)
 	user := User{}
 	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email)
@@ -78,7 +71,11 @@ func getUser(w http.ResponseWriter, userID int) *User {
 	return &user
 }
 
-func getUserFromAccount(w http.ResponseWriter, name string) *User {
+func getUserFromAccount(w http.ResponseWriter, r *http.Request, name string) *User {
+	u := getCurrentUser(w, r)
+	if u != nil && u.AccountName == name {
+		return u
+	}
 	row := db.QueryRow(`SELECT id, account_name, nick_name, email FROM users WHERE account_name = ?`, name)
 	user := User{}
 	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email)
@@ -91,7 +88,8 @@ func getUserFromAccount(w http.ResponseWriter, name string) *User {
 
 func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 	session := getSession(w, r)
-	id := session.Values["user_id"]
+	user := session.Values["user"].(User)
+	id := user.ID
 	row := db.QueryRow(`SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)`, id, anotherID, anotherID, id)
 	cnt := new(int)
 	err := row.Scan(cnt)
@@ -100,7 +98,7 @@ func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 }
 
 func isFriendAccount(w http.ResponseWriter, r *http.Request, name string) bool {
-	user := getUserFromAccount(w, name)
+	user := getUserFromAccount(w, r, name)
 	if user == nil {
 		return false
 	}
@@ -169,7 +167,7 @@ func getTemplatePath(file string) string {
 
 func render(w http.ResponseWriter, r *http.Request, status int, file string, data interface{}) {
 	fmap["getUser"] = func(id int) *User {
-		return getUser(w, id)
+		return getUser(w, r, id)
 	}
 	fmap["getCurrentUser"] = func() *User {
 		return getCurrentUser(w, r)
