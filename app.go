@@ -740,7 +740,7 @@ func main() {
 	password := os.Getenv("ISUCON5_DB_PASSWORD")
 	dbname := os.Getenv("ISUCON5_DB_NAME")
 	if dbname == "" {
-		dbname = "isucon"
+		dbname = "isucon5q"
 	}
 	ssecret := os.Getenv("ISUCON5_SESSION_SECRET")
 	if ssecret == "" {
