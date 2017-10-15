@@ -452,18 +452,30 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := getCurrentUser(w, r)
-	rows, err := db.Query(`SELECT another, created_at FROM relations WHERE one = ? ORDER BY created_at DESC`, user.ID)
+	rows, err := db.Query(`SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC`, user.ID, user.ID)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
-	friends := make([]Friend, 0, 1)
+	friendsMap := make(map[int]time.Time)
 	for rows.Next() {
-		var another int
+		var id, one, another int
 		var createdAt time.Time
-		checkErr(rows.Scan(&another, &createdAt))
-		friends = append(friends, Friend{another, createdAt})
+		checkErr(rows.Scan(&id, &one, &another, &createdAt))
+		var friendID int
+		if one == user.ID {
+			friendID = another
+		} else {
+			friendID = one
+		}
+		if _, ok := friendsMap[friendID]; !ok {
+			friendsMap[friendID] = createdAt
+		}
 	}
 	rows.Close()
+	friends := make([]Friend, 0, len(friendsMap))
+	for key, val := range friendsMap {
+		friends = append(friends, Friend{key, val})
+	}
 	render(w, r, http.StatusOK, "friends.html", struct{ Friends []Friend }{friends})
 }
 
