@@ -31,16 +31,16 @@ WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)`
 		checkErr(err)
 	}
 	session := getSession(w, r)
-	session.Values["user"] = user
+	session.Values["user"] = &user
 	session.Save(r, w)
 }
 
 func getCurrentUser(w http.ResponseWriter, r *http.Request) *User {
 	session := getSession(w, r)
-	user, ok := session.Values["user"].(User)
+	user, ok := session.Values["user"].(*User)
 	if ok {
 		u := user
-		return &u
+		return u
 	}
 	log.Printf("Failed\n")
 	return nil
@@ -89,7 +89,7 @@ func getUserFromAccount(w http.ResponseWriter, r *http.Request, name string) *Us
 
 func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 	session := getSession(w, r)
-	user := session.Values["user"].(User)
+	user := session.Values["user"].(*User)
 	id := user.ID
 	row := db.QueryRow(`SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)`, id, anotherID, anotherID, id)
 	cnt := new(int)
