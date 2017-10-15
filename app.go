@@ -129,7 +129,7 @@ func myHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 				switch {
 				case rcv == ErrAuthentication:
 					session := getSession(w, r)
-					delete(session.Values, "user_id")
+					delete(session.Values, "user")
 					session.Save(r, w)
 					render(w, r, http.StatusUnauthorized, "login.html", struct{ Message string }{"ログインに失敗しました"})
 					return

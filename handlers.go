@@ -23,7 +23,7 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 
 func GetLogout(w http.ResponseWriter, r *http.Request) {
 	session := getSession(w, r)
-	delete(session.Values, "user_id")
+	delete(session.Values, "user")
 	session.Options = &sessions.Options{MaxAge: -1}
 	session.Save(r, w)
 	http.Redirect(w, r, "/login", http.StatusFound)
