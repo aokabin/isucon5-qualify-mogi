@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/store"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
