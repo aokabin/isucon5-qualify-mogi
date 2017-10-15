@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"html/template"
+	"strings"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -70,3 +72,30 @@ var (
 	ErrPermissionDenied = errors.New("Permission denied.")
 	ErrContentNotFound  = errors.New("Content not found.")
 )
+
+var fmap = template.FuncMap{
+	"prefectures": func() []string {
+		return prefs
+	},
+	"substring": func(s string, l int) string {
+		if len(s) > l {
+			return s[:l]
+		}
+		return s
+	},
+	"split": strings.Split,
+	"getEntry": func(id int) Entry {
+		row := db.QueryRow(`SELECT * FROM entries WHERE id=?`, id)
+		var entryID, userID, private int
+		var body string
+		var createdAt time.Time
+		checkErr(row.Scan(&entryID, &userID, &private, &body, &createdAt))
+		return Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+	},
+	"numComments": func(id int) int {
+		row := db.QueryRow(`SELECT COUNT(*) AS c FROM comments WHERE entry_id = ?`, id)
+		var n int
+		checkErr(row.Scan(&n))
+		return n
+	},
+}
