@@ -66,9 +66,9 @@ func authenticated(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func getUser(w http.ResponseWriter, userID int) *User {
-	row := db.QueryRow(`SELECT * FROM users WHERE id = ?`, userID)
+	row := db.QueryRow(`SELECT id, account_name, nick_name, email FROM users WHERE id = ?`, userID)
 	user := User{}
-	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email, new(string))
+	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email)
 	if err == sql.ErrNoRows {
 		checkErr(ErrContentNotFound)
 	}
@@ -77,9 +77,9 @@ func getUser(w http.ResponseWriter, userID int) *User {
 }
 
 func getUserFromAccount(w http.ResponseWriter, name string) *User {
-	row := db.QueryRow(`SELECT * FROM users WHERE account_name = ?`, name)
+	row := db.QueryRow(`SELECT id, account_name, nick_name, email FROM users WHERE account_name = ?`, name)
 	user := User{}
-	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email, new(string))
+	err := row.Scan(&user.ID, &user.AccountName, &user.NickName, &user.Email)
 	if err == sql.ErrNoRows {
 		checkErr(ErrContentNotFound)
 	}
