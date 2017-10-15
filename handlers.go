@@ -78,7 +78,7 @@ LIMIT 10`, user.ID)
 	rows.Close()
 	//rows, err = db.Query(`SELECT id, user_id, private, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
 	rows, err = db.Query(`SELECT id, user_id, private, title, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
-	rows, err = db.Query(`select id, user_id, private, title, created_at from (select id, user_id, private, title, created_a from entries order by created_at desc limit 1000) t1 where user_id in (
+	rows, err = db.Query(`select id, user_id, private, title, created_at from (select id, user_id, private, title, created_at from entries order by created_at desc limit 1000) t1 where user_id in (
 		select distinct * from (
 		select one as friend from relations where another = ?
 		union
