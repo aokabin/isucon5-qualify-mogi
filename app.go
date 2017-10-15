@@ -37,9 +37,9 @@ WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)`
 
 func getCurrentUser(w http.ResponseWriter, r *http.Request) *User {
 	session := getSession(w, r)
-	user, ok := session.Values["user"]
+	user, ok := session.Values["user"].(User)
 	if ok {
-		u := user.(User)
+		u := user
 		return &u
 	}
 	log.Printf("Failed\n")
