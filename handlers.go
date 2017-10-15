@@ -362,6 +362,7 @@ func PostEntry(w http.ResponseWriter, r *http.Request) {
 		private = 1
 	}
 	_, err := db.Exec(`INSERT INTO entries (user_id, private, body) VALUES (?,?,?)`, user.ID, private, title+"\n"+content)
+	//_, err := db.Exec(`INSERT INTO entries (user_id, private, title, body) VALUES (?,?,?,?)`, user.ID, private, title, content)
 	checkErr(err)
 	http.Redirect(w, r, "/diary/entries/"+user.AccountName, http.StatusSeeOther)
 }
@@ -390,7 +391,11 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	user := getCurrentUser(w, r)
-
+	/*
+		s := r.FormValue("comment")
+		sep := strings.SplitN(s, "\n", 2)
+		_, err = db.Exec(`INSERT INTO comments (entry_id, user_id, title, comment) VALUES (?,?,?,?)`, entry.ID, user.ID, sep[0], sep[1])
+	*/
 	_, err = db.Exec(`INSERT INTO comments (entry_id, user_id, comment) VALUES (?,?,?)`, entry.ID, user.ID, r.FormValue("comment"))
 	checkErr(err)
 	http.Redirect(w, r, "/diary/entry/"+strconv.Itoa(entry.ID), http.StatusSeeOther)
@@ -403,10 +408,9 @@ func GetFootprints(w http.ResponseWriter, r *http.Request) {
 
 	user := getCurrentUser(w, r)
 	footprints := make([]Footprint, 0, 50)
-	rows, err := db.Query(`SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) as updated
+	rows, err := db.Query(`SELECT user_id, owner_id, DATE(created_at) AS date, created_at as updated
 FROM footprints
 WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
 ORDER BY updated DESC
 LIMIT 50`, user.ID)
 	if err != sql.ErrNoRows {
