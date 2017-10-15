@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -454,6 +455,7 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 	user := getCurrentUser(w, r)
 	rows, err := db.Query(`SELECT another, created_at FROM relations WHERE one = ? ORDER BY created_at DESC`, user.ID, user.ID)
 	if err != sql.ErrNoRows {
+		fmt.Println(err)
 		checkErr(err)
 	}
 	friends := make([]Friend, 0, 1)
