@@ -166,10 +166,9 @@ LIMIT 10`, user.ID)
 	}
 	rows.Close()
 
-	rows, err = db.Query(`SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
+	rows, err = db.Query(`SELECT user_id, owner_id, DATE(created_at) AS date, created_at AS updated
 FROM footprints
-WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
+WHERE user_id = 1995
 ORDER BY updated DESC
 LIMIT 10`, user.ID)
 	if err != sql.ErrNoRows {
