@@ -78,15 +78,7 @@ LIMIT 10`, user.ID)
 	}
 	rows.Close()
 	//rows, err = db.Query(`SELECT id, user_id, private, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
-	//rows, err = db.Query(`SELECT id, user_id, private, title, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
-	rows, err = db.Query(`select id, user_id, private, title, created_at from (select id, user_id, private, title, created_at from entries order by created_at desc limit 1000) t1 where user_id in (
-		select distinct * from (
-		select one as friend from relations where another = ?
-		union
-		select another as friend from relations where one = ?
-		) as b
-		) order by created_at desc limit 10;
-	`, user.ID, user.ID)
+	rows, err = db.Query(`SELECT id, user_id, private, title, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
@@ -97,14 +89,14 @@ LIMIT 10`, user.ID)
 		var createdAt time.Time
 		checkErr(rows.Scan(&id, &userID, &private, &title, &createdAt))
 		/// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		// if !isFriend(w, r, userID) {
-		// 	continue
-		// }
+		if !isFriend(w, r, userID) {
+			continue
+		}
 		entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, title, "", createdAt})
 		// entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
-		// if len(entriesOfFriends) >= 10 {
-		// 	break
-		// }
+		if len(entriesOfFriends) >= 10 {
+			break
+		}
 	}
 	/*
 	   	s := getSession(w, r)
@@ -458,14 +450,26 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		checkErr(err)
 	}
-	friends := make([]Friend, 0, 1)
+	friendsMap := make(map[int]time.Time)
 	for rows.Next() {
-		var another int
+		var id, one, another int
 		var createdAt time.Time
-		checkErr(rows.Scan(&another, &createdAt))
-		friends = append(friends, Friend{another, createdAt})
+		checkErr(rows.Scan(&id, &one, &another, &createdAt))
+		var friendID int
+		if one == user.ID {
+			friendID = another
+		} else {
+			friendID = one
+		}
+		if _, ok := friendsMap[friendID]; !ok {
+			friendsMap[friendID] = createdAt
+		}
 	}
 	rows.Close()
+	friends := make([]Friend, 0, len(friendsMap))
+	for key, val := range friendsMap {
+		friends = append(friends, Friend{key, val})
+	}
 	render(w, r, http.StatusOK, "friends.html", struct{ Friends []Friend }{friends})
 }
 
