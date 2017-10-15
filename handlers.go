@@ -78,6 +78,14 @@ LIMIT 10`, user.ID)
 	rows.Close()
 	//rows, err = db.Query(`SELECT id, user_id, private, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
 	rows, err = db.Query(`SELECT id, user_id, private, title, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
+	rows, err = db.Query(`select id, user_id, private, title, created_at from (select id, user_id, private, title, created_a from entries order by created_at desc limit 1000) t1 where user_id in (
+		select distinct * from (
+		select one as friend from relations where another = ?
+		union
+		select another as friend from relations where one = ?
+		) as b
+		) order by created_at desc limit 10;
+	`, user.ID)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
@@ -88,14 +96,14 @@ LIMIT 10`, user.ID)
 		var createdAt time.Time
 		checkErr(rows.Scan(&id, &userID, &private, &title, &createdAt))
 		/// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		if !isFriend(w, r, userID) {
-			continue
-		}
+		// if !isFriend(w, r, userID) {
+		// 	continue
+		// }
 		entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, title, "", createdAt})
 		// entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
-		if len(entriesOfFriends) >= 10 {
-			break
-		}
+		// if len(entriesOfFriends) >= 10 {
+		// 	break
+		// }
 	}
 	/*
 	   	s := getSession(w, r)

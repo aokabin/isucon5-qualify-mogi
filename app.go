@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"html/template"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -255,16 +254,7 @@ func main() {
 	r.HandleFunc("/", myHandler(GetIndex))
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("../static")))
 
-	listener, err := net.Listen("unix", "app.sock")
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	defer func() {
-		if err := listener.Close(); err != nil {
-			log.Printf("error: %v", err)
-		}
-	}()
-	log.Fatal(http.Serve(listener, r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 func checkErr(err error) {
