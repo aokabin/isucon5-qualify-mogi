@@ -100,12 +100,15 @@ func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 	// return *cnt > 0
 	id := session.Values["user_id"].(int)
 	fmt.Println(userFriends[id])
+	result := false
 	for _, v := range userFriends[id] {
 		if anotherID == v {
-			return true
+			result = true
+			break
 		}
 	}
-	return false
+	fmt.Println(result)
+	return result
 }
 
 func isFriendAccount(w http.ResponseWriter, r *http.Request, name string) bool {
