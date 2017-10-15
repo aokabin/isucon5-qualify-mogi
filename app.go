@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -91,12 +92,19 @@ func getUserFromAccount(w http.ResponseWriter, name string) *User {
 
 func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 	session := getSession(w, r)
-	id := session.Values["user_id"]
-	row := db.QueryRow(`SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)`, id, anotherID, anotherID, id)
-	cnt := new(int)
-	err := row.Scan(cnt)
-	checkErr(err)
-	return *cnt > 0
+	// id := session.Values["user_id"]
+	// row := db.QueryRow(`SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)`, id, anotherID, anotherID, id)
+	// cnt := new(int)
+	// err := row.Scan(cnt)
+	// checkErr(err)
+	// return *cnt > 0
+	id := session.Values["user_id"].(int)
+	for _, v := range userFriends[id] {
+		if anotherID == v {
+			return true
+		}
+	}
+	return false
 }
 
 func isFriendAccount(w http.ResponseWriter, r *http.Request, name string) bool {
@@ -187,6 +195,23 @@ func GetInitialize(w http.ResponseWriter, r *http.Request) {
 	db.Exec("DELETE FROM footprints WHERE id > 500000")
 	db.Exec("DELETE FROM entries WHERE id > 500000")
 	db.Exec("DELETE FROM comments WHERE id > 1500000")
+
+	getFriendList()
+}
+
+func getFriendList() {
+	rows, err := db.Query(`select one, another from relations`)
+	if err != sql.ErrNoRows {
+		checkErr(err)
+	}
+
+	for rows.Next() {
+		var userID, friendID int
+		checkErr(rows.Scan(&userID, &friendID))
+		fmt.Println(userID)
+		userFriends[userID] = append(userFriends[userID], friendID)
+	}
+	rows.Close()
 }
 
 func main() {
