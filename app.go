@@ -99,15 +99,15 @@ func isFriend(w http.ResponseWriter, r *http.Request, anotherID int) bool {
 	// checkErr(err)
 	// return *cnt > 0
 	id := session.Values["user_id"].(int)
-	fmt.Println(userFriends[id])
 	result := false
+	fmt.Println(userFriends[id])
+	fmt.Println(anotherID)
 	for _, v := range userFriends[id] {
 		if anotherID == v {
 			result = true
 			break
 		}
 	}
-	fmt.Println(result)
 	return result
 }
 
