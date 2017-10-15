@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/coreos/etcd/store"
+	gsm "github.com/bradleypeabody/gorilla-sessions-memcache"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
