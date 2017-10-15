@@ -483,6 +483,7 @@ func PostFriends(w http.ResponseWriter, r *http.Request) {
 		id := session.Values["user_id"].(int)
 
 		userFriends[id] = append(userFriends[id], another.ID)
+		userFriends[another.ID] = append(userFriends[another.ID], id)
 		http.Redirect(w, r, "/friends", http.StatusSeeOther)
 	}
 
