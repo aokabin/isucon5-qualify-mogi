@@ -482,6 +482,12 @@ func PostFriends(w http.ResponseWriter, r *http.Request) {
 		another := getUserFromAccount(w, anotherAccount)
 		_, err := db.Exec(`INSERT INTO relations (one, another) VALUES (?,?), (?,?)`, user.ID, another.ID, another.ID, user.ID)
 		checkErr(err)
+
+		session := getSession(w, r)
+		id := session.Values["user_id"].(int)
+
+		userFriends[id] = append(userFriends[id], another.ID)
 		http.Redirect(w, r, "/friends", http.StatusSeeOther)
 	}
+
 }
