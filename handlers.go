@@ -88,9 +88,9 @@ LIMIT 10`, user.ID)
 		var createdAt time.Time
 		checkErr(rows.Scan(&id, &userID, &private, &title, &createdAt))
 		/// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		if !isFriend(w, r, userID) {
-			continue
-		}
+		// if !isFriend(w, r, userID) {
+		// 	continue
+		// }
 		entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, title, "", createdAt})
 		// entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
 		if len(entriesOfFriends) >= 10 {
