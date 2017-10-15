@@ -42,6 +42,7 @@ func getCurrentUser(w http.ResponseWriter, r *http.Request) *User {
 		u := user.(User)
 		return &u
 	}
+	log.Printf("Failed\n")
 	return nil
 }
 
