@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -200,6 +199,7 @@ func GetInitialize(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFriendList() {
+	userFriends = make(map[int][]int)
 	rows, err := db.Query(`select one, another from relations`)
 	if err != sql.ErrNoRows {
 		checkErr(err)
@@ -208,7 +208,6 @@ func getFriendList() {
 	for rows.Next() {
 		var userID, friendID int
 		checkErr(rows.Scan(&userID, &friendID))
-		fmt.Println(userID)
 		userFriends[userID] = append(userFriends[userID], friendID)
 	}
 	rows.Close()
