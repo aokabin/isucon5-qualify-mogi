@@ -7,13 +7,14 @@ import (
 	"strings"
 	"time"
 
+	gsm "github.com/bradleypeabody/gorilla-sessions-memcache"
+
 	"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/sessions"
 )
 
 var (
 	db    *sql.DB
-	store *sessions.CookieStore
+	store *gsm.MemcacheStore
 )
 
 type User struct {
