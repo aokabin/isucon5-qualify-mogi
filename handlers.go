@@ -453,7 +453,7 @@ func GetFriends(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := getCurrentUser(w, r)
-	rows, err := db.Query(`SELECT another, created_at FROM relations WHERE one = ? ORDER BY created_at DESC`, user.ID, user.ID)
+	rows, err := db.Query(`SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC`, user.ID, user.ID, user.ID)
 	if err != sql.ErrNoRows {
 		fmt.Println(err)
 		checkErr(err)
