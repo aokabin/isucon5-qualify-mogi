@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/coreos/etcd/store"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -223,8 +225,8 @@ func main() {
 	}
 	defer db.Close()
 
-	store = sessions.NewCookieStore([]byte(ssecret))
-
+	memcacheClient := memcache.New("localhost:11211")
+	store = gsm.NewMemcacheStore(memcacheClient, "", []byte(ssecret))
 	r := mux.NewRouter()
 
 	l := r.Path("/login").Subrouter()
