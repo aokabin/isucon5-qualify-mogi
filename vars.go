@@ -86,12 +86,13 @@ var fmap = template.FuncMap{
 	},
 	"split": strings.Split,
 	"getEntry": func(id int) Entry {
-		row := db.QueryRow(`SELECT id, user_id, private, body, created_at FROM entries WHERE id=?`, id)
+		row := db.QueryRow(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE id=?`, id)
 		var entryID, userID, private int
 		var body string
+		var title string
 		var createdAt time.Time
-		checkErr(row.Scan(&entryID, &userID, &private, &body, &createdAt))
-		return Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+		checkErr(row.Scan(&entryID, &userID, &private, &title, &body, &createdAt))
+		return Entry{id, userID, private == 1, title, body, createdAt}
 	},
 	"numComments": func(id int) int {
 		row := db.QueryRow(`SELECT COUNT(id) AS c FROM comments WHERE entry_id = ?`, id)

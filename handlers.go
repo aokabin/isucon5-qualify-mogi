@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -44,21 +43,21 @@ func GetIndex(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 	}
 
-	rows, err := db.Query(`SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`, user.ID)
-	// rows, err := db.Query(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`, user.ID)
+	//rows, err := db.Query(`SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`, user.ID)
+	rows, err := db.Query(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`, user.ID)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
 	entries := make([]Entry, 0, 5)
 	for rows.Next() {
 		var id, userID, private int
-		// var title string
+		var title string
 		var body string
 		var createdAt time.Time
-		// checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
-		checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		// entries = append(entries, Entry{id, userID, private == 1, title, body, createdAt})
-		entries = append(entries, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
+		checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
+		// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
+		entries = append(entries, Entry{id, userID, private == 1, title, body, createdAt})
+		//entries = append(entries, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
 	}
 	rows.Close()
 
@@ -78,24 +77,24 @@ LIMIT 10`, user.ID)
 		commentsForMe = append(commentsForMe, c)
 	}
 	rows.Close()
-	rows, err = db.Query(`SELECT id, user_id, private, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
-	// rows, err = db.Query(`SELECT id, user_id, private, title, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
+	//rows, err = db.Query(`SELECT id, user_id, private, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
+	rows, err = db.Query(`SELECT id, user_id, private, title, body, created_at FROM entries ORDER BY created_at DESC LIMIT 1000`)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
 	entriesOfFriends := make([]Entry, 0, 10)
 	for rows.Next() {
 		var id, userID, private int
-		// var title string
+		var title string
 		var body string
 		var createdAt time.Time
-		// checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
-		checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
+		checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
+		/// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
 		if !isFriend(w, r, userID) {
 			continue
 		}
-		// entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, title, body, createdAt})
-		entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
+		entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, title, body, createdAt})
+		// entriesOfFriends = append(entriesOfFriends, Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt})
 		if len(entriesOfFriends) >= 10 {
 			break
 		}
@@ -120,8 +119,8 @@ LIMIT 10`, user.ID)
 	*/
 	rows.Close()
 
-	rows, err = db.Query(`SELECT id, entry_id, user_id, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
-	// rows, err = db.Query(`SELECT id, entry_id, user_id, title, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
+	// rows, err = db.Query(`SELECT id, entry_id, user_id, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
+	rows, err = db.Query(`SELECT id, entry_id, user_id, title, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1000`)
 	if err != sql.ErrNoRows {
 		checkErr(err)
 	}
@@ -132,14 +131,15 @@ LIMIT 10`, user.ID)
 		if !isFriend(w, r, c.UserID) {
 			continue
 		}
-		row := db.QueryRow(`SELECT id, user_id, private, body, created_at FROM entries WHERE id = ?`, c.EntryID)
+		row := db.QueryRow(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE id = ?`, c.EntryID)
 		var id, userID, private int
-		// var title string
+		var title string
 		var body string
 		var createdAt time.Time
-		checkErr(row.Scan(&id, &userID, &private, &body, &createdAt))
-		// entry := Entry{id, userID, private == 1, title, body, createdAt}
-		entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+		// checkErr(row.Scan(&id, &userID, &private, &body, &createdAt))
+		checkErr(row.Scan(&id, &userID, &private, &title, &body, &createdAt))
+		entry := Entry{id, userID, private == 1, title, body, createdAt}
+		// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
 		if entry.Private {
 			if !permitted(w, r, entry.UserID) {
 				continue
@@ -222,9 +222,9 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var query string
 	if permitted(w, r, owner.ID) {
-		query = `SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`
+		query = `SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5`
 	} else {
-		query = `SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at LIMIT 5`
+		query = `SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at LIMIT 5`
 	}
 	rows, err := db.Query(query, owner.ID)
 	if err != sql.ErrNoRows {
@@ -233,13 +233,13 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 	entries := make([]Entry, 0, 5)
 	for rows.Next() {
 		var id, userID, private int
-		// var title string
+		var title string
 		var body string
 		var createdAt time.Time
-		// checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
-		checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		// entry := Entry{id, userID, private == 1, title, body, createdAt}
-		entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+		checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
+		// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
+		entry := Entry{id, userID, private == 1, title, body, createdAt}
+		// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
 		entries = append(entries, entry)
 	}
 	rows.Close()
@@ -288,9 +288,9 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	owner := getUserFromAccount(w, account)
 	var query string
 	if permitted(w, r, owner.ID) {
-		query = `SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`
+		query = `SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`
 	} else {
-		query = `SELECT id, user_id, private, body, created_at FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20`
+		query = `SELECT id, user_id, private, title, body, created_at FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20`
 	}
 	rows, err := db.Query(query, owner.ID)
 	if err != sql.ErrNoRows {
@@ -299,13 +299,13 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	entries := make([]Entry, 0, 20)
 	for rows.Next() {
 		var id, userID, private int
-		// var title string
+		var title string
 		var body string
 		var createdAt time.Time
-		// checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
-		checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
-		// entry := Entry{id, userID, private == 1, title, body, createdAt}
-		entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+		checkErr(rows.Scan(&id, &userID, &private, &title, &body, &createdAt))
+		// checkErr(rows.Scan(&id, &userID, &private, &body, &createdAt))
+		entry := Entry{id, userID, private == 1, title, body, createdAt}
+		// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
 		entries = append(entries, entry)
 	}
 	rows.Close()
@@ -324,19 +324,19 @@ func GetEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	entryID := mux.Vars(r)["entry_id"]
-	row := db.QueryRow(`SELECT id, user_id, private, body, created_at FROM entries WHERE id = ?`, entryID)
+	row := db.QueryRow(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE id = ?`, entryID)
 	var id, userID, private int
-	// var title string
+	var title string
 	var body string
 	var createdAt time.Time
-	// err := row.Scan(&id, &userID, &private, &title, &body, &createdAt)
-	err := row.Scan(&id, &userID, &private, &body, &createdAt)
+	err := row.Scan(&id, &userID, &private, &title, &body, &createdAt)
+	// err := row.Scan(&id, &userID, &private, &body, &createdAt)
 	if err == sql.ErrNoRows {
 		checkErr(ErrContentNotFound)
 	}
 	checkErr(err)
-	// entry := Entry{id, userID, private == 1, title, body, createdAt}
-	entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+	entry := Entry{id, userID, private == 1, title, body, createdAt}
+	// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
 	owner := getUser(w, entry.UserID)
 	if entry.Private {
 		if !permitted(w, r, owner.ID) {
@@ -381,8 +381,8 @@ func PostEntry(w http.ResponseWriter, r *http.Request) {
 	} else {
 		private = 1
 	}
-	_, err := db.Exec(`INSERT INTO entries (user_id, private, body) VALUES (?,?,?)`, user.ID, private, title+"\n"+content)
-	//_, err := db.Exec(`INSERT INTO entries (user_id, private, title, body) VALUES (?,?,?,?)`, user.ID, private, title, content)
+	// _, err := db.Exec(`INSERT INTO entries (user_id, private, body) VALUES (?,?,?)`, user.ID, private, title+"\n"+content)
+	_, err := db.Exec(`INSERT INTO entries (user_id, private, title, body) VALUES (?,?,?,?)`, user.ID, private, title, content)
 	checkErr(err)
 	http.Redirect(w, r, "/diary/entries/"+user.AccountName, http.StatusSeeOther)
 }
@@ -393,19 +393,19 @@ func PostComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entryID := mux.Vars(r)["entry_id"]
-	row := db.QueryRow(`SELECT id, user_id, private, body, created_at FROM entries WHERE id = ?`, entryID)
+	row := db.QueryRow(`SELECT id, user_id, private, title, body, created_at FROM entries WHERE id = ?`, entryID)
 	var id, userID, private int
-	// var title string
+	var title string
 	var body string
 	var createdAt time.Time
-	// err := row.Scan(&id, &userID, &private, &title, &body, &createdAt)
-	err := row.Scan(&id, &userID, &private, &body, &createdAt)
+	err := row.Scan(&id, &userID, &private, &title, &body, &createdAt)
+	// err := row.Scan(&id, &userID, &private, &body, &createdAt)
 	if err == sql.ErrNoRows {
 		checkErr(ErrContentNotFound)
 	}
 	checkErr(err)
-	// entry := Entry{id, userID, private == 1, title, body, createdAt}
-	entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
+	entry := Entry{id, userID, private == 1, title, body, createdAt}
+	// entry := Entry{id, userID, private == 1, strings.SplitN(body, "\n", 2)[0], strings.SplitN(body, "\n", 2)[1], createdAt}
 	owner := getUser(w, entry.UserID)
 	if entry.Private {
 		if !permitted(w, r, owner.ID) {
